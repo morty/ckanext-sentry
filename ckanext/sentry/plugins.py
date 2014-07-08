@@ -11,8 +11,14 @@ log = logging.getLogger(__name__)
 
 class SentryPlugin(plugins.SingletonPlugin):
     '''A simple plugin that add the Sentry middleware to CKAN'''
-    plugins.implements(plugins.IMiddleware)
+    plugins.implements(plugins.IMiddleware, inherit=True)
 
     def make_middleware(self, app, config):
+        if plugins.toolkit.check_ckan_version('2.3'):
+            return app
+        else:
+            return self.make_error_log_middleware(app, config)
+
+    def make_error_log_middleware(self, app, config):
         from raven.contrib.pylons import Sentry
         return Sentry(app, config)
